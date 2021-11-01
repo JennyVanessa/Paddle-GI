@@ -50,6 +50,11 @@ you can change the total test number in test.py
 and change the test model in tester.py
 you can see the test log in test.txt
 
+## Model
+you may find our pre-trained model here:  
+link：https://pan.baidu.com/s/16uKEXhe71AxLeOnakQ32Rg 
+key：x4tr  
+
 # 3 关于论文
 References
 1. [论文链接](https://paperswithcode.com/paper/generative-image-inpainting-with-contextual)
