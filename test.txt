@@ -1,0 +1,227 @@
+2021-11-01 09:28:28,206 INFO Arguments: Namespace(config='configs/config.yaml', seed=None)
+2021-11-01 09:28:28,206 INFO Random seed: 8047
+2021-11-01 09:28:28,206 INFO Configuration: {'dataset_name': 'imagenet', 'data_with_subfolder': True, 'train_data_path': '/home/aistudio/test_256/', 'val_data_path': None, 'resume': '/home/aistudio/generative-inpainting/checkpoints/imagenet/hole_benchmark/', 'batch_size': 1, 'image_shape': [256, 256, 3], 'mask_shape': [128, 128], 'mask_batch_same': True, 'max_delta_shape': [32, 32], 'margin': [0, 0], 'discounted_mask': True, 'spatial_discounting_gamma': 0.9, 'random_crop': True, 'mask_type': 'hole', 'mosaic_unit_size': 12, 'expname': 'benchmark', 'cuda': True, 'gpu_ids': [0, 1, 2], 'num_workers': 4, 'lr': 0.0001, 'beta1': 0.5, 'beta2': 0.9, 'n_critic': 5, 'niter': 500000, 'print_iter': 100, 'viz_iter': 1000, 'viz_max_out': 16, 'snapshot_save_iter': 1000, 'coarse_l1_alpha': 1.2, 'l1_loss_alpha': 1.2, 'ae_loss_alpha': 1.2, 'global_wgan_loss_alpha': 1.0, 'gan_loss_alpha': 0.001, 'wgan_gp_lambda': 10, 'netG': {'input_dim': 3, 'ngf': 32}, 'netD': {'input_dim': 3, 'ndf': 64}}
+2021-11-01 09:28:28,207 INFO Training on dataset: imagenet
+2021-11-01 09:28:33,973 INFO 
+Generator(
+  (coarse_generator): CoarseGenerator(
+    (conv1): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(5, 32, kernel_size=[5, 5], padding=2, data_format=NCHW)
+    )
+    (conv2_downsample): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(32, 64, kernel_size=[3, 3], stride=[2, 2], padding=1, data_format=NCHW)
+    )
+    (conv3): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(64, 64, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (conv4_downsample): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(64, 128, kernel_size=[3, 3], stride=[2, 2], padding=1, data_format=NCHW)
+    )
+    (conv5): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(128, 128, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (conv6): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(128, 128, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (conv7_atrous): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(128, 128, kernel_size=[3, 3], padding=2, dilation=[2, 2], data_format=NCHW)
+    )
+    (conv8_atrous): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(128, 128, kernel_size=[3, 3], padding=4, dilation=[4, 4], data_format=NCHW)
+    )
+    (conv9_atrous): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(128, 128, kernel_size=[3, 3], padding=8, dilation=[8, 8], data_format=NCHW)
+    )
+    (conv10_atrous): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(128, 128, kernel_size=[3, 3], padding=16, dilation=[16, 16], data_format=NCHW)
+    )
+    (conv11): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(128, 128, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (conv12): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(128, 128, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (conv13): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(128, 64, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (conv14): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(64, 64, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (conv15): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(64, 32, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (conv16): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(32, 16, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (conv17): Conv2dBlock(
+      (conv): Conv2D(16, 3, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+  )
+  (fine_generator): FineGenerator(
+    (conv1): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(5, 32, kernel_size=[5, 5], padding=2, data_format=NCHW)
+    )
+    (conv2_downsample): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(32, 32, kernel_size=[3, 3], stride=[2, 2], padding=1, data_format=NCHW)
+    )
+    (conv3): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(32, 64, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (conv4_downsample): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(64, 64, kernel_size=[3, 3], stride=[2, 2], padding=1, data_format=NCHW)
+    )
+    (conv5): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(64, 128, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (conv6): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(128, 128, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (conv7_atrous): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(128, 128, kernel_size=[3, 3], padding=2, dilation=[2, 2], data_format=NCHW)
+    )
+    (conv8_atrous): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(128, 128, kernel_size=[3, 3], padding=4, dilation=[4, 4], data_format=NCHW)
+    )
+    (conv9_atrous): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(128, 128, kernel_size=[3, 3], padding=8, dilation=[8, 8], data_format=NCHW)
+    )
+    (conv10_atrous): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(128, 128, kernel_size=[3, 3], padding=16, dilation=[16, 16], data_format=NCHW)
+    )
+    (pmconv1): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(5, 32, kernel_size=[5, 5], padding=2, data_format=NCHW)
+    )
+    (pmconv2_downsample): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(32, 32, kernel_size=[3, 3], stride=[2, 2], padding=1, data_format=NCHW)
+    )
+    (pmconv3): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(32, 64, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (pmconv4_downsample): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(64, 128, kernel_size=[3, 3], stride=[2, 2], padding=1, data_format=NCHW)
+    )
+    (pmconv5): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(128, 128, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (pmconv6): Conv2dBlock(
+      (activation): ReLU()
+      (conv): Conv2D(128, 128, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (contextul_attention): ContextualAttention()
+    (pmconv9): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(128, 128, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (pmconv10): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(128, 128, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (allconv11): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(256, 128, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (allconv12): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(128, 128, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (allconv13): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(128, 64, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (allconv14): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(64, 64, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (allconv15): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(64, 32, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (allconv16): Conv2dBlock(
+      (activation): ELU(alpha=1.0)
+      (conv): Conv2D(32, 16, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+    (allconv17): Conv2dBlock(
+      (conv): Conv2D(16, 3, kernel_size=[3, 3], padding=1, data_format=NCHW)
+    )
+  )
+)
+2021-11-01 09:28:33,974 INFO 
+LocalDis(
+  (dis_conv_module): DisConvModule(
+    (conv1): Conv2dBlock(
+      (activation): LeakyReLU(negative_slope=0.2)
+      (conv): Conv2D(3, 64, kernel_size=[5, 5], stride=[2, 2], padding=2, data_format=NCHW)
+    )
+    (conv2): Conv2dBlock(
+      (activation): LeakyReLU(negative_slope=0.2)
+      (conv): Conv2D(64, 128, kernel_size=[5, 5], stride=[2, 2], padding=2, data_format=NCHW)
+    )
+    (conv3): Conv2dBlock(
+      (activation): LeakyReLU(negative_slope=0.2)
+      (conv): Conv2D(128, 256, kernel_size=[5, 5], stride=[2, 2], padding=2, data_format=NCHW)
+    )
+    (conv4): Conv2dBlock(
+      (activation): LeakyReLU(negative_slope=0.2)
+      (conv): Conv2D(256, 256, kernel_size=[5, 5], stride=[2, 2], padding=2, data_format=NCHW)
+    )
+  )
+  (linear): Linear(in_features=16384, out_features=1, dtype=float32)
+)
+2021-11-01 09:28:33,974 INFO 
+GlobalDis(
+  (dis_conv_module): DisConvModule(
+    (conv1): Conv2dBlock(
+      (activation): LeakyReLU(negative_slope=0.2)
+      (conv): Conv2D(3, 64, kernel_size=[5, 5], stride=[2, 2], padding=2, data_format=NCHW)
+    )
+    (conv2): Conv2dBlock(
+      (activation): LeakyReLU(negative_slope=0.2)
+      (conv): Conv2D(64, 128, kernel_size=[5, 5], stride=[2, 2], padding=2, data_format=NCHW)
+    )
+    (conv3): Conv2dBlock(
+      (activation): LeakyReLU(negative_slope=0.2)
+      (conv): Conv2D(128, 256, kernel_size=[5, 5], stride=[2, 2], padding=2, data_format=NCHW)
+    )
+    (conv4): Conv2dBlock(
+      (activation): LeakyReLU(negative_slope=0.2)
+      (conv): Conv2D(256, 256, kernel_size=[5, 5], stride=[2, 2], padding=2, data_format=NCHW)
+    )
+  )
+  (linear): Linear(in_features=65536, out_features=1, dtype=float32)
+)
+Resume from /home/aistudio/generative-inpainting/checkpoints/imagenet/hole_benchmark/ at iteration 141000
+2021-11-01 09:28:34,185 INFO Resume from /home/aistudio/generative-inpainting/checkpoints/imagenet/hole_benchmark/ at iteration 141000
+l1: 0.05754418524811045
+l2: 0.03774303715420538
+PSNR: 21.250202454376222
