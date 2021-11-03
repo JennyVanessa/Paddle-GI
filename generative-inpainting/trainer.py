@@ -1,7 +1,5 @@
 import os
-#import torch
-#import torch.nn as nn
-#from torch import autograd
+
 
 import paddle
 import paddle.nn as nn
@@ -9,7 +7,7 @@ from paddle import autograd
 
 from model.networks import Generator, LocalDis, GlobalDis
 
-#from duiqi import transfer
+
 
 
 from utils.tools import get_model_list, local_patch, spatial_discounting_mask
@@ -29,31 +27,13 @@ class Trainer(nn.Layer):
         self.netG = Generator(self.config['netG'], self.use_cuda, self.device_ids)
         self.localD = LocalDis(self.config['netD'], self.use_cuda, self.device_ids)
         self.globalD = GlobalDis(self.config['netD'], self.use_cuda, self.device_ids)
-        # transfer(self.globalD)
-
-        # paddle_checkpoint = paddle.load('gen_00042500.pdparams')
-        # self.netG.set_state_dict(paddle_checkpoint)
-        # paddle_checkpoint = paddle.load('paddle2.pdparams')
-        # self.localD.set_state_dict(paddle_checkpoint)
-        # paddle_checkpoint = paddle.load('paddle3.pdparams')
-        # self.globalD.set_state_dict(paddle_checkpoint)
-
-        # self.optimizer_g = paddle.optimizer.Adam(parameters=self.netG.parameters(), learning_rate=self.config['lr'],
-        #                                     beta1=self.config['beta1'], beta2=self.config['beta2'])
-        # d_params = list(self.localD.parameters()) + list(self.globalD.parameters())
-        # self.optimizer_d = paddle.optimizer.Adam(parameters=d_params, learning_rate=config['lr'],
-        #                                     beta1=self.config['beta1'], beta2=self.config['beta2'])
-
+        
         self.optimizer_g = paddle.optimizer.Adam(parameters=self.netG.parameters(), learning_rate=self.config['lr'],
                                             beta1=self.config['beta1'], beta2=self.config['beta2'],grad_clip=paddle.nn.ClipGradByGlobalNorm(clip_norm=0.1))
         d_params = list(self.localD.parameters()) + list(self.globalD.parameters())
         self.optimizer_d = paddle.optimizer.Adam(parameters=d_params, learning_rate=config['lr'],
                                             beta1=self.config['beta1'], beta2=self.config['beta2'],grad_clip=paddle.nn.ClipGradByGlobalNorm(clip_norm=0.1))
 
-        # if self.use_cuda:
-        #     self.netG.to(self.device_ids[0])
-        #     self.localD.to(self.device_ids[0])
-        #     self.globalD.to(self.device_ids[0])
 
     def forward(self, x, bboxes, masks, ground_truth, compute_loss_g=False):
         self.train()
@@ -65,7 +45,6 @@ class Trainer(nn.Layer):
         x2_inpaint = x2 * masks + x * (1. - masks)
         local_patch_x1_inpaint = local_patch(x1_inpaint, bboxes)
         local_patch_x2_inpaint = local_patch(x2_inpaint, bboxes)
-        #print(paddle.max(x1_inpaint-ground_truth))
 
         # D part
         # wgan d loss
@@ -75,8 +54,7 @@ class Trainer(nn.Layer):
             self.globalD, ground_truth, x2_inpaint.detach())
         losses['wgan_d'] = paddle.mean(local_patch_fake_pred - local_patch_real_pred) + \
            paddle.mean(global_fake_pred - global_real_pred) * self.config['global_wgan_loss_alpha']
-        # losses['wgan_d'] = paddle.abs(paddle.mean(local_patch_real_pred - local_patch_fake_pred )) + \
-        #      paddle.abs(paddle.mean(global_fake_pred - global_real_pred) * self.config['global_wgan_loss_alpha'])
+
         # gradients penalty loss
         local_penalty = self.calc_gradient_penalty(
             self.localD, local_patch_gt, local_patch_x2_inpaint.detach())
@@ -86,7 +64,6 @@ class Trainer(nn.Layer):
         # G part
         if compute_loss_g:
             sd_mask = spatial_discounting_mask(self.config)
-            #print(np.max((local_patch_x1_inpaint * sd_mask-local_patch_gt * sd_mask).numpy()))
             losses['l1'] = l1_loss(local_patch_x1_inpaint * sd_mask, local_patch_gt * sd_mask) * \
                 self.config['coarse_l1_alpha'] + \
                 l1_loss(local_patch_x2_inpaint * sd_mask, local_patch_gt * sd_mask)
@@ -106,7 +83,6 @@ class Trainer(nn.Layer):
 
     def dis_forward(self, netD, ground_truth, x_inpaint):
         assert ground_truth.shape == x_inpaint.shape
-        #batch_size = ground_truth.shape[0]
         batch_data = paddle.concat([ground_truth, x_inpaint], axis=0)
         batch_output = netD(batch_data)
         real_pred,fake_pred=paddle.split(batch_output,2,axis=0)
@@ -122,7 +98,6 @@ class Trainer(nn.Layer):
             alpha = alpha.cuda()
 
         interpolates = alpha * real_data + (1 - alpha) * fake_data
-        #interpolates = interpolates.requires_grad_().clone()
         interpolates = paddle.to_tensor(interpolates,stop_gradient=False)
 
         disc_interpolates = netD(interpolates)
@@ -135,9 +110,8 @@ class Trainer(nn.Layer):
                                   grad_outputs=grad_outputs, create_graph=True,
                                   retain_graph=True, only_inputs=True)[0]
 
-        #gradients = gradients.view(batch_size, -1)
+
         gradients = paddle.reshape(gradients,[batch_size,-1])
-        #gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean()
         gradient_penalty = paddle.mean((paddle.norm(gradients,p=2,axis=1)-1)**2)
 
         return gradient_penalty
@@ -145,7 +119,6 @@ class Trainer(nn.Layer):
     def inference(self, x, masks):
         self.eval()
         x1, x2, offset_flow = self.netG(x, masks)
-        # x1_inpaint = x1 * masks + x * (1. - masks)
         x2_inpaint = x2 * masks + x * (1. - masks)
 
         return x2_inpaint, offset_flow
@@ -163,10 +136,7 @@ class Trainer(nn.Layer):
 
     def resume(self, checkpoint_dir, iteration=144000, test=False):
         # Load generators
-        #last_model_name = get_model_list(checkpoint_dir, "gen", iteration=iteration)
-        #self.netG.set_state_dict(paddle.load(last_model_name))
         self.netG.set_state_dict(paddle.load(checkpoint_dir+"gen_00"+str(iteration)+".pdparams"))
-        #iteration = int(last_model_name[-14:-9])
         if not test:
             # Load discriminators
             #last_model_name = get_model_list(checkpoint_dir, "dis", iteration=iteration)
