@@ -1,4 +1,4 @@
-# 0 About
+# About
 Deepfillv1 reproduction based on PaddlePaddle framework.
 
 This project reproduces [Generative Image Inpainting with Contextual Attention](https://paperswithcode.com/paper/generative-image-inpainting-with-contextual) based on the paddlepaddle framework and participates in the Baidu paper reproduction competition. The AIStudio link is provided as follow:
