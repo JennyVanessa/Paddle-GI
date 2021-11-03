@@ -1,3 +1,9 @@
+# 0 About
+Deepfillv1 reproduction based on PaddlePaddle framework.
+
+This project reproduces [Generative Image Inpainting with Contextual Attention](https://paperswithcode.com/paper/generative-image-inpainting-with-contextual) based on the paddlepaddle framework and participates in the Baidu paper reproduction competition. The AIStudio link is provided as follow:
+
+[link](https://aistudio.baidu.com/aistudio/projectdetail/2547325?channelType=0&channel=0)
 # 1 论文简介
 - Generative Image Inpainting with Contextual Attention是UIUC的Jiahui Yu在Thomas S. Huang的指导下，联合Adobe Research完成的一项工作，发表于CVPR 2018。
 
