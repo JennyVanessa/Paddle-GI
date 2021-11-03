@@ -2,12 +2,6 @@ import os
 import random
 from argparse import ArgumentParser
 
-# import torch
-# import torch.nn as nn
-# import torch.backends.cudnn as cudnn
-# import torchvision.transforms as transforms
-# import torchvision.utils as vutils
-
 import paddle
 import paddle.nn as nn
 import paddle.vision.transforms as transforms
