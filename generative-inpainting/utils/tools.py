@@ -1,6 +1,5 @@
 import os
 import paddle
-#from paddle.nn.functional import pad
 import yaml
 import numpy as np
 from PIL import Image
@@ -38,16 +37,8 @@ def tensor_img_to_npimg(tensor_img):
 
 # Change the values of tensor x from range [0, 1] to [-1, 1]
 def normalize(x):
-    #return x.mul_(2).add_(-1)
-    #mat_shape=x.shape
-    #item= paddle.ones(mat_shape)
-    #item=paddle.clip(item,min=2)
-    #print("lxz",item)
-    #x=paddle.matmul(x,paddle.to_tensor([2]))
     x=2*x
     x=x-1
-    #item=paddle.clip(item,max=-1)
-    #x=paddle.add(x,paddle.to_tensor([-1]))
     return x
 
 def same_padding(images, ksizes, strides, rates):
@@ -65,7 +56,6 @@ def same_padding(images, ksizes, strides, rates):
     padding_bottom = padding_rows - padding_top
     padding_right = padding_cols - padding_left
     paddings = [padding_left, padding_right, padding_top, padding_bottom]
-    #images = paddle.nn.ZeroPad2d(paddings)(images)
     images = F.pad(images,paddings,mode='constant')
     return images
 
@@ -174,8 +164,6 @@ def mask_image(x, bboxes, config):
     height, width, _ = config['image_shape']
     max_delta_h, max_delta_w = config['max_delta_shape']
     mask = bbox2mask(bboxes, height, width, max_delta_h, max_delta_w)
-    #if x.is_cuda:
-    #    mask = mask.cuda()
 
     if config['mask_type'] == 'hole':
         result = x * (1. - mask)
