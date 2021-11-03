@@ -3,25 +3,18 @@ import random
 import time
 import shutil
 from argparse import ArgumentParser
-#from paddle.nn.layer import loss
-
-#import torch
-#import torch.nn as nn
-#import torch.backends.cudnn as cudnn
-#import torchvision.utils as vutils
 
 import paddle
 import paddle.nn as nn
 import paddle.vision
 import numpy as np
 
-#from tensorboardX import SummaryWriter
 
 from trainer import Trainer
 from data.dataset import Dataset
 from utils.tools import get_config, random_bbox, mask_image
 from utils.logger import get_logger
-#from reprod_log import ReprodLogger
+
 import scipy.misc
 import cv2
 
