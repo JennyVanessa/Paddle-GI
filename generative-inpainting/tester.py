@@ -1,7 +1,4 @@
 import os
-#import torch
-#import torch.nn as nn
-#from torch import autograd
 
 import paddle
 import paddle.nn as nn
@@ -9,7 +6,7 @@ from paddle import autograd
 
 from model.networks import Generator, LocalDis, GlobalDis
 
-#from duiqi import transfer
+
 
 
 from utils.tools import get_model_list, local_patch, spatial_discounting_mask
