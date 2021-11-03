@@ -1,8 +1,3 @@
-
-#from torch.nn.modules import padding
-#from torchvision import transforms
-#from torchvision import utils as vutils
-
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
@@ -65,7 +60,6 @@ class CoarseGenerator(nn.Layer):
             ones = ones.cuda()
             mask = mask.cuda()
         # 5 x 256 x 256
-        #x = self.conv1(paddle.cat([x, ones, mask], dim=1))####
         x = self.conv1(paddle.concat([x, ones, mask], axis=1))
         x = self.conv2_downsample(x)
         # cnum*2 x 128 x 128
@@ -91,7 +85,6 @@ class CoarseGenerator(nn.Layer):
         x = self.conv17(x)
         # 3 x 256 x 256
         x_stage1 = paddle.clip(x, -1., 1.)
-        #x_stage1 = F.sigmoid(x)
 
         return x_stage1
 
@@ -142,7 +135,6 @@ class FineGenerator(nn.Layer):
     def forward(self, xin, x_stage1, mask):
         x1_inpaint = x_stage1 * mask + xin * (1. - mask)
         # For indicating the boundaries of images
-        #ones = paddle.ones(xin.size(0), 1, xin.size(2), xin.size(3))
         ones = paddle.ones([xin.shape[0], 1, xin.shape[2], xin.shape[3]],dtype="float32")
         if self.use_cuda:
             ones = ones.cuda()
@@ -202,20 +194,6 @@ class ContextualAttention(nn.Layer):
         self.device_ids = device_ids
 
     def forward(self, f, b, mask=None):
-        """ Contextual attention layer implementation.
-        Contextual attention is first introduced in publication:
-            Generative Image Inpainting with Contextual Attention, Yu et al.
-        Args:
-            f: Input feature to match (foreground).
-            b: Input feature for match (background).
-            mask: Input mask for b, indicating patches not available.
-            ksize: Kernel size for contextual attention.
-            stride: Stride for extracting patches from b.
-            rate: Dilation for matching.
-            softmax_scale: Scaled softmax for attention.
-        Returns:
-            torch.tensor: output
-        """
         # get shapes
         raw_int_fs = list(f.shape)   # b*c*h*w
         raw_int_bs = list(b.shape)   # b*c*h*w
@@ -229,11 +207,8 @@ class ContextualAttention(nn.Layer):
                                       rates=[1, 1],
                                       padding='same') # [N, C*k*k, L]
         # raw_shape: [N, C, k, k, L]
-        #raw_w = raw_w.reshape(raw_int_bs[0], raw_int_bs[1], kernel, kernel, -1)
         raw_w = paddle.reshape(raw_w,[raw_int_bs[0], raw_int_bs[1], kernel, kernel, -1])
-        #raw_w = raw_w.permute(0, 4, 1, 2, 3)    # raw_shape: [N, L, C, k, k]
         raw_w = paddle.transpose(raw_w,[0,4,1,2,3])
-        #raw_w_groups = paddle.split(raw_w, 1, axis=0)
 
         # downscaling foreground option: downscaling both foreground and
         # background for matching and use original background for reconstruction.
@@ -241,18 +216,15 @@ class ContextualAttention(nn.Layer):
         b = F.interpolate(b, scale_factor=1./self.rate, mode='nearest')
         int_fs = list(f.shape)     # b*c*h*w
         int_bs = list(b.shape)
-        #f_groups = paddle.split(f, 1, axis=0)  # split tensors along the batch dimension
-        # w shape: [N, C*k*k, L]
+
         w = extract_image_patches(b, ksizes=[self.ksize, self.ksize],
                                   strides=[self.stride, self.stride],
                                   rates=[1, 1],
                                   padding='same')
-        # w shape: [N, C, k, k, L]
-        #w = w.reshape(int_bs[0], int_bs[1], self.ksize, self.ksize, -1)
+
         w = paddle.reshape(w,[int_bs[0], int_bs[1], self.ksize, self.ksize, -1])
-        #w = w.permute(0, 4, 1, 2, 3)    # w shape: [N, L, C, k, k]
         w = paddle.transpose(w,[0,4,1,2,3])
-        #w_groups = paddle.split(w, 1, axis=0)
+
 
 
         # process mask
@@ -269,18 +241,15 @@ class ContextualAttention(nn.Layer):
                                   rates=[1, 1],
                                   padding='same')
         # m shape: [N, C, k, k, L]
-        #m = m.reshape(int_ms[0], int_ms[1], self.ksize, self.ksize, -1)
+
         m = paddle.reshape(m,[int_ms[0], int_ms[1], self.ksize, self.ksize, -1])
-        #m = m.permute(0, 4, 1, 2, 3)    # m shape: [N, L, C, k, k]
         m = paddle.transpose(m,[0,4,1,2,3])
         m = m[0]    # m shape: [L, C, k, k]
 
-        # mm shape: [L, 1, 1, 1]
-        #mm = (reduce_mean(m, axis=[1, 2, 3], keepdim=True)==0.).to(paddle.float32)
+
         mm = reduce_mean(m, axis=[1, 2, 3], keepdim=True)==0.
         mm = mm.astype("float32")
 
-        #mm = mm.permute(1, 0, 2, 3) # mm shape: [1, L, 1, 1]
         mm = paddle.transpose(mm,[1,0,2,3])
 
         y = []
@@ -296,7 +265,7 @@ class ContextualAttention(nn.Layer):
             xi=f[0].unsqueeze(0)
             wi=w[0].unsqueeze(0)
             raw_wi=raw_w[0].unsqueeze(0)
-        #for xi, wi, raw_wi in zip(f_groups, w_groups, raw_w_groups):
+
             '''
             O => output channel as a conv filter
             I => input channel as a conv filter
@@ -311,32 +280,23 @@ class ContextualAttention(nn.Layer):
             wi = wi[0]  # [L, C, k, k]
             max_wi = paddle.sqrt(reduce_sum(paddle.pow(wi, 2) + escape_NaN, axis=[1, 2, 3], keepdim=True))
             wi_normed = wi / max_wi
-            # xi shape: [1, C, H, W], yi shape: [1, L, H, W]
+
             xi = same_padding(xi, [self.ksize, self.ksize], [1, 1], [1, 1])  # xi: 1*c*H*W
             yi = F.conv2d(xi, wi_normed, stride=1)   # [1, L, H, W]
             # conv implementation for fuse scores to encourage large patches
             if self.fuse:
                 # make all of depth to spatial resolution
-                #yi = yi.reshape(1, 1, int_bs[2]*int_bs[3], int_fs[2]*int_fs[3])  # (B=1, I=1, H=32*32, W=32*32)
+
                 yi = paddle.reshape(yi,[1, 1, int_bs[2]*int_bs[3], int_fs[2]*int_fs[3]])
                 yi = same_padding(yi, [k, k], [1, 1], [1, 1])
                 yi = F.conv2d(yi, fuse_weight, stride=1)  # (B=1, C=1, H=32*32, W=32*32)
-                #yi = yi.contiguous().reshape(1, int_bs[2], int_bs[3], int_fs[2], int_fs[3])  # (B=1, 32, 32, 32, 32)
-                #yi = yi.reshape(1, int_bs[2], int_bs[3], int_fs[2], int_fs[3])
                 yi = paddle.reshape(yi,[1,int_bs[2], int_bs[3], int_fs[2], int_fs[3]])
-                #yi = yi.permute(0, 2, 1, 4, 3)
                 yi = paddle.transpose(yi,[0,2,1,4,3])
-                #yi = yi.contiguous().reshape(1, 1, int_bs[2]*int_bs[3], int_fs[2]*int_fs[3])
-                #yi = yi.reshape(1, 1, int_bs[2]*int_bs[3], int_fs[2]*int_fs[3])
                 yi = paddle.reshape(yi,[1, 1, int_bs[2]*int_bs[3], int_fs[2]*int_fs[3]])
                 yi = same_padding(yi, [k, k], [1, 1], [1, 1])
                 yi = F.conv2d(yi, fuse_weight, stride=1)
-                #yi = yi.contiguous().reshape(1, int_bs[3], int_bs[2], int_fs[3], int_fs[2])
-                #yi = yi.reshape(1, int_bs[3], int_bs[2], int_fs[3], int_fs[2])
                 yi = paddle.reshape(yi,[1, int_bs[3], int_bs[2], int_fs[3], int_fs[2]])
-                #yi = yi.permute(0, 2, 1, 4, 3).contiguous()
                 yi = paddle.transpose(yi,[0,2,1,4,3])
-            #yi = yi.reshape(1, int_bs[2] * int_bs[3], int_fs[2], int_fs[3])  # (B=1, C=32*32, H=32, W=32)
             yi = paddle.reshape(yi,[1, int_bs[2] * int_bs[3], int_fs[2], int_fs[3]])
             # softmax to match
             yi = yi * mm
@@ -356,7 +316,6 @@ class ContextualAttention(nn.Layer):
 
             # deconv for patch pasting
             wi_center = raw_wi[0]
-            # yi = F.pad(yi, [0, 1, 0, 1])    # here may need conv_transpose same padding
             yi = F.conv2d_transpose(yi, wi_center, stride=self.rate, padding=1) / 4.  # (B=1, C=128, H=64, W=64) ################################
             y.append(yi)
             offsets.append(offset)
@@ -373,26 +332,19 @@ class ContextualAttention(nn.Layer):
 
         h_add = paddle.reshape(paddle.arange(int_fs[2]),[1, 1, int_fs[2], 1])
         h_add= paddle.expand(h_add,[int_fs[0], -1, -1, int_fs[3]])
-        #h_add = paddle.arange(int_fs[2]).view([1, 1, int_fs[2], 1]).expand(int_fs[0], -1, -1, int_fs[3])
         w_add = paddle.reshape(paddle.arange(int_fs[3]),[1, 1, 1, int_fs[3]])
         w_add = paddle.expand(w_add,[int_fs[0], -1, int_fs[2], -1])
-        #w_add = paddle.arange(int_fs[3]).view([1, 1, 1, int_fs[3]]).expand(int_fs[0], -1, int_fs[2], -1)
         ref_coordinate = paddle.concat([h_add, w_add], axis=1)
         if self.use_cuda:
             ref_coordinate = ref_coordinate.cuda()
 
         offsets = offsets - ref_coordinate
-        # flow = pt_flow_to_image(offsets)
 
-        #flow = torch.from_numpy(flow_to_image(offsets.permute(0, 2, 3, 1).cpu().data.numpy())) / 255.
-        #flow = paddle.to_tensor(flow_to_image(offsets.permute(0, 2, 3, 1).cpu().data.numpy())) / 255.
         flow = paddle.to_tensor(flow_to_image(offsets.transpose([0, 2, 3, 1]).cpu().numpy())) / 255.
-        #flow = flow.permute(0, 3, 1, 2)
         flow= paddle.transpose(flow,[0,3,1,2])
         if self.use_cuda:
             flow = flow.cuda()
         # case2: visualize which pixels are attended
-        # flow = torch.from_numpy(highlight_flow((offsets * mask.long()).cpu().data.numpy()))
 
         if self.rate != 1:
             flow = F.interpolate(flow, scale_factor=self.rate*4, mode='nearest')
@@ -413,7 +365,6 @@ class LocalDis(nn.Layer):
 
     def forward(self, x):
         x = self.dis_conv_module(x)
-        #x = x.reshape(x.size()[0], -1)
         x = paddle.reshape(x,[x.shape[0],-1])
         x = self.linear(x)
 
@@ -433,7 +384,6 @@ class GlobalDis(nn.Layer):
 
     def forward(self, x):
         x = self.dis_conv_module(x)
-        #x = x.reshape(x.shape[0], -1)
         x = paddle.reshape(x,[x.shape[0], -1])
         x = self.linear(x)
 
@@ -482,19 +432,7 @@ class Conv2dBlock(nn.Layer):
         self.use_bias = True
         self.pad_type = pad_type
         self.padding = padding
-        # initialize padding
-        #if pad_type == 'reflect':
-            #self.pad = nn.ReflectionPad2d(padding)
-        #    self.pad = F.pad(mode="")
-        #elif pad_type == 'replicate':
-        #    self.pad = nn.ReplicationPad2d(padding)
-        #elif pad_type == 'zero':
-        #    self.pad = nn.ZeroPad2d(padding)
-        #elif pad_type == 'none':
-        #    self.pad = None
-        #else:
-        #    assert 0, "Unsupported padding type: {}".format(pad_type)
-
+  
         # initialize normalization
         norm_dim = output_dim
         if norm == 'bn':
@@ -574,14 +512,5 @@ class Conv2dBlock(nn.Layer):
 
 
 if __name__ == "__main__":
-    #import argparse
-    #parser = argparse.ArgumentParser()
-    #parser.add_argument('--imageA', default='', type=str, help='Image A as background patches to reconstruct image B.')
-    #parser.add_argument('--imageB', default='', type=str, help='Image B is reconstructed with image A.')
-    #parser.add_argument('--imageOut', default='result.png', type=str, help='Image B is reconstructed with image A.')
-    #args = parser.parse_args()
-    #test_contextual_attention(args)
-
-
-    lxz=ContextualAttention()
-    print(lxz)
+    contextattention=ContextualAttention()
+    print(contextattention)
