@@ -40,10 +40,6 @@ class Dataset(Dataset):
             img = transforms.RandomCrop(self.image_shape)(img)
 
         img = transforms.ToTensor()(img)  # turn the image to a tensor
-
-        #img = img.numpy()
-        #img=np.around(img,4)
-        #img=paddle.to_tensor(img)
         
         img = normalize(img)
         img=img.numpy()
@@ -73,9 +69,6 @@ class Dataset(Dataset):
         class_to_idx = {classes[i]: i for i in range(len(classes))}
         samples = []
         for target in sorted(class_to_idx.keys()):
-        # for target in sorted(classes):
-            # d = os.path.join(dir, target)
-            # samples.append(d)
             d = os.path.join(dir, target)
             if not os.path.isdir(d):
                 continue
